@@ -5,249 +5,266 @@
                                    - Auto Combo (W) + (Q)
 ]]--
 if myHero.charName ~= "Alistar" then return end
-            local version = "1.00"
-            local qRadius = 365 -- q radius
-            local wRange = 650 -- w range
-            local eRange = 575 -- E radius
-			local Qdelay = 0.10
-            local ignite = nil
-            local ts
-            --[[Spell damage]]
-            local Qdamage = {60, 105, 150, 195, 240}
-            local Qscaling = 0.5
-            local Wdamage = {55, 110, 165, 220, 275}
-            local Wscaling = 0.7
-            local MainCombo = {_W, _Q, _AA, _AA, _IGNITE}
-            --[[CDS]]
-            local QREADY = true
-            local WREADY = true
-            local EREADY = true
-            local IGNITEREADY = true
-			local VP
-			local Menu = nil
-			local ComboMode
-
-
+local version = "1.00"
+local qRadius = 365 -- q radius
+local qRange = 365 -- q range
+local wRange = 650 -- w range
+local eRange = 575 -- E range
+local Qdelay = 0.10
+local ignite = nil
+local ts
+--[[Spell damage]]
+local Qdamage = {60, 105, 150, 195, 240}
+local Qscaling = 0.5
+local Wdamage = {55, 110, 165, 220, 275}
+local Wscaling = 0.7
+local MainCombo = {_W, _Q, _AA, _AA, _IGNITE}
+--[[CDS]]
+local QREADY = true
+local WREADY = true
+local EREADY = true
+local IGNITEREADY = true
+local VP
+local AlistarMenu = nil
 local LastChampionSpell = {}
 local SelectedTarget = nil
-
 local DamageToHeros = {}
 local lastrefresh = 0
 require "VPrediction"
-
 local InterruptList =
-            {
-              ["Katarina"] = "KatarinaR",
-              ["Malzahar"] = "AlZaharNetherGrasp",
-              ["Warwick"] = "InfiniteDuress",
-              ["Velkoz"] = "VelkozR"
-            }
-           
-            function OnLoad()
-			allyHeroes = GetAllyHeroes()
-            Menu = scriptConfig("Alistar", "Alistar")
-            --[[Combo]]
-                        Menu:addSubMenu("Combo", "Combo")
-                        Menu.Combo:addParam("UseQ", "Use Q", SCRIPT_PARAM_ONOFF , true)
-                        Menu.Combo:addParam("UseW", "Use W", SCRIPT_PARAM_ONOFF, true)
-                        Menu.Combo:addParam("UseE", "Use E", SCRIPT_PARAM_ONOFF, true)
-                        Menu.Combo:addParam("UseQN", "Use Q at least in", SCRIPT_PARAM_LIST, 1, { "1 target", "2 targets", "3 targets", "4 targets" , "5 targets"})
-                        Menu.Combo:addParam("UseI", "Use Ignite if enemy is killable", SCRIPT_PARAM_ONOFF, true)
-                        Menu.Combo:addParam("Move", "Move to mouse", SCRIPT_PARAM_ONOFF, false)
-                        Menu.Combo:addParam("Enabled", "Normal combo", SCRIPT_PARAM_ONKEYDOWN, false, 32)
-                        Menu:addSubMenu("Misc", "Misc")
-                        Menu.Misc:addParam("UseQ", "Auto-Q if it will hit", SCRIPT_PARAM_LIST, 1, { "No", ">0 targets", ">1 targets", ">2 targets", ">3 targets", ">4 targets" })
-                        Menu.Misc:addParam("Interrupt", "Auto interrupt important spells", SCRIPT_PARAM_ONOFF, false)
-                        Menu.Misc:addParam("BlockQ", "Block Q if it is not going to hit", SCRIPT_PARAM_ONOFF, false)
-						Menu.Misc:addParam("UseE", "Use E", SCRIPT_PARAM_ONOFF, true)
-						
-		    ts = TargetSelector(TARGET_CLOSEST, wRange, DAMAGE_MAGIC)
-                ts.name = "Alistar"
-                Menu:addTS(ts)
-		 
-		  
-		  
-            --[[Harassing]]
-            --Menu:addSubMenu("Harass", "Harass")
-                        --Menu.Harass:addParam("UseQ", "Use Q", SCRIPT_PARAM_ONOFF , true)
-            --         Menu.Harass:addParam("UseW", "Use W", SCRIPT_PARAM_ONOFF, false)
-            --         Menu.Harass:addParam("ManaCheck", "Don't harass if mana < %", SCRIPT_PARAM_SLICE, 0, 0, 100)
-            --         Menu.Harass:addParam("Enabled", "Harass!", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
-            --         Menu.Harass:addParam("Enabled2", "Harass (TOGGLE)!", SCRIPT_PARAM_ONKEYTOGGLE, false, string.byte("L"))
-            --[[Drawing]]
-                        Menu:addSubMenu("Drawing", "Drawing")
-                        Menu.Drawing:addParam("Qrange", "Draw Q range", SCRIPT_PARAM_ONOFF, true)
-                        Menu.Drawing:addParam("Wrange", "Draw W radius", SCRIPT_PARAM_ONOFF, true)
-                        Menu.Drawing:addParam("Erange", "Draw E radius", SCRIPT_PARAM_ONOFF, true)
-						Menu.Drawing:addParam("DrawCircle", "DrawCircle", SCRIPT_PARAM_ONOFF, true)
-                        Menu.Drawing:addParam("DrawDamage", "Draw damage after combo in healthbars", SCRIPT_PARAM_ONOFF, true)
-                        Menu.Drawing:permaShow("Drawing")
-						Menu.Drawing:permaShow("drawcirclests")
-                       
-                        Menu:addParam("Version", "Version", SCRIPT_PARAM_INFO, version)
-           
-           if myHero:GetSpellData(SUMMONER_1).name:find("SummonerDot") then
-                        _IGNITE = SUMMONER_1
-            elseif myHero:GetSpellData(SUMMONER_2).name:find("SummonerDot") then
-                        _IGNITE = SUMMONER_2
-            else
-                        _IGNITE = nil
-            end
-            VP = VPrediction()
-            PrintChat("<font color=\"#81BEF7\">[Alistar] Command: Load succesfully!</font>")
+    {
+    ["Katarina"] = "KatarinaR",
+    ["Malzahar"] = "AlZaharNetherGrasp",
+    ["Warwick"] = "InfiniteDuress",
+    ["Velkoz"] = "VelkozR"
+    }      
+function OnLoad()
+	allyHeroes = GetAllyHeroes()
+    --[[Target]]
+	ts = TargetSelector(TARGET_CLOSEST, wRange, DAMAGE_MAGIC)
+    ts.name = "Alistar"      
+    if myHero:GetSpellData(SUMMONER_1).name:find("SummonerDot") then
+        _IGNITE = SUMMONER_1
+    elseif myHero:GetSpellData(SUMMONER_2).name:find("SummonerDot") then
+        _IGNITE = SUMMONER_2
+    else
+        _IGNITE = nil
+    end
+    VP = VPrediction()
+    PrintChat("<font color=\"#81BEF7\">[Alistar] Command: Load succesfully!</font>")
 end
- 
-function Combo(target)
-                        -- Combo (W) and (Q) when both are ready
-
-                        if ts.target ~= nil and WREADY and GetDistance(ts.target) <= wRange then
-                                   CastSpell(_W,ts.target)
-                        end
-                        -- To not waste a skill and mana, check if the target are in the radius of the skill
-                        if ts.target ~= nil and QREADY and GetDistance(ts.target) <= qRadius then
-                                   CastSpell(_Q)
-                        end
-                        -- If (W) is not ready and are not in range for (Q) then AutoAttack
-                        if ts.target ~= nil and WREADY ~= READY and GetDistance(ts.target) < wRange and GetDistance(ts.target) > qRadius - 10 then
-                                   myHero:Attack(ts.target)
-                        end
-
-end
- 
+function OnTick()
+	OnTickChecks()	
+	RefreshKillableTexts()			
+	-- TS
+	ts:update()
+	Target = ts.target
+	-- Menu Vars --
+	ComboKey =   AlistarMenu.combo.comboKey
+	if ComboKey then FullCombo() end
+	if AlistarMenu.Misc.autoignite then AutoIgnite() end
+    -- Auto Heal (E) when less than 75% HP
+    -- if AlistarCH.autoheal and EREADY and myHero.health / myHero.maxHealth < 0.8 then
+    -- CastSpell(_E)
+    -- end
+end  
 function OnTickChecks()
-            QREADY = (myHero:CanUseSpell(_Q) == READY) or (myHero:GetSpellData(_Q).currentCd < 1)
-            WREADY = (myHero:CanUseSpell(_W) == READY) or (myHero:GetSpellData(_W).currentCd < 1)
-            EREADY = (myHero:CanUseSpell(_E) == READY) or (myHero:GetSpellData(_E).currentCd < 1)
-            IGNITEREADY = _IGNITE and myHero:CanUseSpell(_IGNITE) == READY or false
-            QMana = myHero:GetSpellData(_Q).mana
-            WMana = myHero:GetSpellData(_W).mana          
-            RefreshKillableTexts()
-			
-            if Menu.Misc.UseE then       
-                     for _, ally in pairs(allyHeroes) do 
-                                if GetDistance(ally) < eRange and ally.health / ally.maxHealth < 0.8 then
-									CastSpell(_E)
-                                end
-                      end
-            end
-            if Menu.Misc.UseQ > 1 and QREADY then
-                        local hitcount, hit = CheckEnemiesHitByQ()
-                        if hitcount >= (Menu.Misc.UseQ -1) then
-                                   CastSpell(_Q)
-                        end                 
-            end
-            if Menu.Misc.Interrupt then
-                        for i, unit in ipairs(GetEnemyHeroes()) do
-                                   for champion, spell in pairs(InterruptList) do
-                                   --if GetDistance(unit) <= Wrange and LastChampionSpell[unit.networkID] and spell == LastChampionSpell[unit.networkID].name and (os.clock() - LastChampionSpell[unit.networkID].time < 1) then
-                                  ---                         CastSpell(_W, unit)
-                                   --            end
-                                   end
-                        end
-            end
+    QREADY = (myHero:CanUseSpell(_Q) == READY) or (myHero:GetSpellData(_Q).currentCd < 1)
+    WREADY = (myHero:CanUseSpell(_W) == READY) or (myHero:GetSpellData(_W).currentCd < 1)
+    EREADY = (myHero:CanUseSpell(_E) == READY) or (myHero:GetSpellData(_E).currentCd < 1)
+    IGNITEREADY = _IGNITE and myHero:CanUseSpell(_IGNITE) == READY or false
+    QMana = myHero:GetSpellData(_Q).mana
+    WMana = myHero:GetSpellData(_W).mana          
+    
+    if AlistarMenu.Misc.UseE then       
+		for _, ally in pairs(GetAllyHeroes()) do 
+			if GetDistance(ally) <= eRange and (ally.health / ally.maxHealth) < 0.8 then
+				CastSpell(_E)
+			end
+		end
+	end
+
+    if AlistarMenu.Misc.UseQ > 1 and QREADY then
+        local hitcount, hit = CheckEnemiesHitByQ()
+            if hitcount >= (AlistarMenu.Misc.UseQ -1) then
+                CastSpell(_Q)
+            end                 
+    end
+	
+    if AlistarMenu.Misc.Interrupt then
+        for i, unit in ipairs(GetEnemyHeroes()) do
+            for champion, spell in pairs(InterruptList) do
+                --if GetDistance(unit) <= Wrange and LastChampionSpell[unit.networkID] and spell == LastChampionSpell[unit.networkID].name and (os.clock() - LastChampionSpell[unit.networkID].time < 1) then
+                     --- CastSpell(_W, unit)
+                -- end
+             end
+        end
+    end
 end
+function AlistarMenu()
+AlistarMenu:addTS(ts)		
+	AlistarMenu = scriptConfig("Alistar come milk the balls", "Alistar")
+        --[[Combo]]
+        AlistarMenu:addSubAlistarMenu("Combo", "Combo")
+        AlistarMenu.Combo:addParam("UseQ", "Use Q", SCRIPT_PARAM_ONOFF , true)
+        AlistarMenu.Combo:addParam("UseW", "Use W", SCRIPT_PARAM_ONOFF, true)
+        AlistarMenu.Combo:addParam("UseQN", "Use Q at least in", SCRIPT_PARAM_LIST, 1, { "1 target", "2 targets", "3 targets", "4 targets" , "5 targets"})
+        AlistarMenu.Combo:addParam("Move", "Move to mouse", SCRIPT_PARAM_ONOFF, false)
+        AlistarMenu.Combo:addParam("comboKey", "Combo", SCRIPT_PARAM_ONKEYDOWN, false, 32)
+        AlistarMenu.combo:permaShow("comboKey") 
+		--[[Misc]]
+		AlistarMenu:addSubAlistarMenu("Misc", "Misc")
+        AlistarMenu.Misc:addParam("UseQ", "Auto-Q if it will hit", SCRIPT_PARAM_LIST, 1, { "No", ">0 targets", ">1 targets", ">2 targets", ">3 targets", ">4 targets" })
+        AlistarMenu.Misc:addParam("Interrupt", "Auto interrupt important spells", SCRIPT_PARAM_ONOFF, false)
+        AlistarMenu.Misc:addParam("BlockQ", "Block Q if it is not going to hit", SCRIPT_PARAM_ONOFF, false)
+		AlistarMenu.Misc:addParam("UseE", "Use E", SCRIPT_PARAM_ONOFF, true)
+		AlistarMenu.Misc:addParam("autoIgnite", "Auto Ignite", SCRIPT_PARAM_ONOFF, true)
+        --[[Harassing]]
+        --AlistarMenu:addSubAlistarMenu("Harass", "Harass")
+        --AlistarMenu.Harass:addParam("UseQ", "Use Q", SCRIPT_PARAM_ONOFF , true)
+        --AlistarMenu.Harass:addParam("UseW", "Use W", SCRIPT_PARAM_ONOFF, false)
+        --AlistarMenu.Harass:addParam("ManaCheck", "Don't harass if mana < %", SCRIPT_PARAM_SLICE, 0, 0, 100)
+        --AlistarMenu.Harass:addParam("Enabled", "Harass!", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
+        --AlistarMenu.Harass:addParam("Enabled2", "Harass (TOGGLE)!", SCRIPT_PARAM_ONKEYTOGGLE, false, string.byte("L"))
+        --[[Drawing]]
+        AlistarMenu:addSubAlistarMenu("Drawing", "Drawing")
+        AlistarMenu.Drawing:addParam("Qrange", "Draw Q range", SCRIPT_PARAM_ONOFF, true)
+        AlistarMenu.Drawing:addParam("Wrange", "Draw W radius", SCRIPT_PARAM_ONOFF, true)
+		AlistarMenu.Drawing:addParam("drawcirclests", "Combo helper", SCRIPT_PARAM_ONOFF, true)
+		AlistarMenu.Drawing:addParam("DrawDamage", "Draw damage after combo in healthbars", SCRIPT_PARAM_ONOFF, true)
+        AlistarMenu.Drawing:addParam("ComboPossible", "Drawtext if combo if combo is possible", SCRIPT_PARAM_ONOFF, true)
+		--AlistarMenu.Drawing:permaShow("Drawing")
+		--AlistarMenu.Drawing:permaShow("drawcirclests")
+        --AlistarMenu.Drawing:permaShow("ComboPossible")		
+        AlistarMenu:addParam("Version", "Version", SCRIPT_PARAM_INFO, version)
+end 
+ --Based on Manciuzz Orbwalker http://pastebin.com/jufCeE0e
+
+function OrbWalking(Target)
+	if TimeToAttack() and GetDistance(Target) <= myHero.range + GetDistance(myHero.minBBox) then
+		myHero:Attack(Target)
+    elseif heroCanMove() then
+        moveToCursor()
+    end
+end
+function TimeToAttack()
+    return (GetTickCount() + GetLatency()/2 > lastAttack + lastAttackCD)
+end
+function heroCanMove()
+	return (GetTickCount() + GetLatency()/2 > lastAttack + lastWindUpTime + 20)
+end
+function moveToCursor()
+	if GetDistance(mousePos) then
+		local moveToPos = myHero + (Vector(mousePos) - myHero):normalized()*300
+		myHero:MoveTo(moveToPos.x, moveToPos.z)
+    end        
+end
+function OnProcessSpell(object,spell)
+	if object == myHero then
+		if spell.name:lower():find("attack") then
+			lastAttack = GetTickCount() - GetLatency()/2
+			lastWindUpTime = spell.windUpTime*1000
+			lastAttackCD = spell.animationTime*1000
+        end
+    end
+end
+function OnAnimation(unit,animationName)
+    if unit.isMe and lastAnimation ~= animationName then lastAnimation = animationName end
+end
+ -- Auto Ignite --
+function AutoIgnite()
+	if Target ~= nil then
+		if Target.health <= 50 + 20 * myHero.level and GetDistance(Target) <= 600 then
+			if IGNITEREADY then CastSpell(ignite, Target) end
+		end
+	end
+end
+-- Combo--
+function Combo(target)
+     -- Combo (W) and (Q) when both are ready
+     if ts.target ~= nil and WREADY and GetDistance(ts.target) <= wRange then
+        CastSpell(_W,ts.target)
+     end
+    -- To not waste a skill and mana, check if the target are in the radius of the skill
+    if ts.target ~= nil and QREADY and GetDistance(ts.target) <= qRadius then
+         CastSpell(_Q)
+    end
+    -- If (W) and (Q) are on cd then AutoAttack
+    if ts.target ~= nil and WREADY ~= READY and GetDistance(ts.target) < wRange and GetDistance(ts.target) > qRadius - 10 then
+        myHero:Attack(ts.target)
+    end
+
+end
+ 
+
 --[[       Credits to zikkah        ]]
 function GetHPBarPos(enemy)
-            enemy.barData = GetEnemyBarData()
-            local barPos = GetUnitHPBarPos(enemy)
-            local barPosOffset = GetUnitHPBarOffset(enemy)
-            local barOffset = { x = enemy.barData.PercentageOffset.x, y = enemy.barData.PercentageOffset.y }
-            local barPosPercentageOffset = { x = enemy.barData.PercentageOffset.x, y = enemy.barData.PercentageOffset.y }
-            local BarPosOffsetX = 171
-            local BarPosOffsetY = 46
-            local CorrectionY =  0
-            local StartHpPos = 31
-            barPos.x = barPos.x + (barPosOffset.x - 0.5 + barPosPercentageOffset.x) * BarPosOffsetX + StartHpPos
-            barPos.y = barPos.y + (barPosOffset.y - 0.5 + barPosPercentageOffset.y) * BarPosOffsetY + CorrectionY
-                                                                      
-            local StartPos = Vector(barPos.x , barPos.y, 0)
-            local EndPos =  Vector(barPos.x + 108 , barPos.y , 0)
- 
-            return Vector(StartPos.x, StartPos.y, 0), Vector(EndPos.x, EndPos.y, 0)
+    enemy.barData = GetEnemyBarData()
+    local barPos = GetUnitHPBarPos(enemy)
+    local barPosOffset = GetUnitHPBarOffset(enemy)
+    local barOffset = { x = enemy.barData.PercentageOffset.x, y = enemy.barData.PercentageOffset.y }
+    local barPosPercentageOffset = { x = enemy.barData.PercentageOffset.x, y = enemy.barData.PercentageOffset.y }
+    local BarPosOffsetX = 171
+    local BarPosOffsetY = 46
+    local CorrectionY =  0
+    local StartHpPos = 31
+    barPos.x = barPos.x + (barPosOffset.x - 0.5 + barPosPercentageOffset.x) * BarPosOffsetX + StartHpPos
+    barPos.y = barPos.y + (barPosOffset.y - 0.5 + barPosPercentageOffset.y) * BarPosOffsetY + CorrectionY                                                          
+    local StartPos = Vector(barPos.x , barPos.y, 0)
+    local EndPos =  Vector(barPos.x + 108 , barPos.y , 0)
+    return Vector(StartPos.x, StartPos.y, 0), Vector(EndPos.x, EndPos.y, 0)
 end
- 
 function DrawIndicator(unit, health)
-            local SPos, EPos = GetHPBarPos(unit)
-            local barlenght = EPos.x - SPos.x
-            local Position = SPos.x + (health / unit.maxHealth) * barlenght
-            if Position < SPos.x then
-                        Position = SPos.x
-            end
-            DrawText("|", 13, Position, SPos.y+10, ARGB(255,0,255,0))
+    local SPos, EPos = GetHPBarPos(unit)
+    local barlenght = EPos.x - SPos.x
+    local Position = SPos.x + (health / unit.maxHealth) * barlenght
+    if Position < SPos.x then
+        Position = SPos.x
+    end
+    DrawText("|", 13, Position, SPos.y+10, ARGB(255,0,255,0))
 end
- 
 function DrawOnHPBar(unit, health)
-            local Pos = GetHPBarPos(unit)
-            if health < 0 then
-                        DrawCircle2(unit.x, unit.y, unit.z, 100, ARGB(255, 255, 0, 0))       
-                        DrawText("HP: "..health,13, Pos.x, Pos.y, ARGB(255,255,0,0))
-            else
-                        DrawText("HP: "..health,13, Pos.x, Pos.y, ARGB(255,0,255,0))
-            end
+    local Pos = GetHPBarPos(unit)
+        if health < 0 then
+            DrawCircle2(unit.x, unit.y, unit.z, 100, ARGB(255, 255, 0, 0))       
+            DrawText("HP: "..health,13, Pos.x, Pos.y, ARGB(255,255,0,0))
+        else
+            DrawText("HP: "..health,13, Pos.x, Pos.y, ARGB(255,0,255,0))
+        end
 end
- 
- 
 --[[Credits to barasia, vadash and viseversa for anti-lag circles]]
 function DrawCircleNextLvl(x, y, z, radius, width, color, chordlength)
-            radius = radius or 300
-            quality = math.max(8,math.floor(180/math.deg((math.asin((chordlength/(2*radius)))))))
-            quality = 2 * math.pi / quality
-            radius = radius*.92
-            local points = {}
-            for theta = 0, 2 * math.pi + quality, quality do
-                        local c = WorldToScreen(D3DXVECTOR3(x + radius * math.cos(theta), y, z - radius * math.sin(theta)))
-                        points[#points + 1] = D3DXVECTOR2(c.x, c.y)
-            end
-            DrawLines2(points, width or 1, color or 4294967295)
+    radius = radius or 300
+    quality = math.max(8,math.floor(180/math.deg((math.asin((chordlength/(2*radius)))))))
+    quality = 2 * math.pi / quality
+    radius = radius*.92
+    local points = {}
+    for theta = 0, 2 * math.pi + quality, quality do
+        local c = WorldToScreen(D3DXVECTOR3(x + radius * math.cos(theta), y, z - radius * math.sin(theta)))
+        points[#points + 1] = D3DXVECTOR2(c.x, c.y)
+    end
+    DrawLines2(points, width or 1, color or 4294967295)
 end
- 
 function DrawCircle2(x, y, z, radius, color)
-            local vPos1 = Vector(x, y, z)
-            local vPos2 = Vector(cameraPos.x, cameraPos.y, cameraPos.z)
-            local tPos = vPos1 - (vPos1 - vPos2):normalized() * radius
-            local sPos = WorldToScreen(D3DXVECTOR3(tPos.x, tPos.y, tPos.z))
-            if OnScreen({ x = sPos.x, y = sPos.y }, { x = sPos.x, y = sPos.y })  then
-                        DrawCircleNextLvl(x, y, z, radius, 1, color, 75)       
-            end
-end
- 
-function OnDraw()
-            if Menu.Drawing.Qrange then
-                        DrawCircle2(myHero.x, myHero.y, myHero.z, Qrange, ARGB(255, 0, 255, 0))
-            end
-            if Menu.Drawing.Wrange then
-                        DrawCircle2(BallPos.x, BallPos.y, BallPos.z, Wradius, ARGB(255,0,255,0))
-            end
-            --[[HealthBar HP tracker]]
-            if Menu.Drawing.DrawDamage then
-                        for i=1, heroManager.iCount do
-                                   local enemy = heroManager:GetHero(i)
-                                   if ValidTarget(enemy) then
-                                               if DamageToHeros[i] ~= nil then
-                                                           RemainingHealth = enemy.health - DamageToHeros[i]
-                                               end
-                                               if RemainingHealth ~= nil then
-                                                           DrawIndicator(enemy, math.floor(RemainingHealth))
-                                                           DrawOnHPBar(enemy, math.floor(RemainingHealth))
-                                               end
-                                   end
-                        end
-            end
-            if SelectedTarget ~= nil and ValidTarget(SelectedTarget) then
-                        DrawCircle2(SelectedTarget.x, SelectedTarget.y, SelectedTarget.z, 100, ARGB(255,255,0,0))
-            end
-end     
+    local vPos1 = Vector(x, y, z)
+    local vPos2 = Vector(cameraPos.x, cameraPos.y, cameraPos.z)
+    local tPos = vPos1 - (vPos1 - vPos2):normalized() * radius
+    local sPos = WorldToScreen(D3DXVECTOR3(tPos.x, tPos.y, tPos.z))
+    if OnScreen({ x = sPos.x, y = sPos.y }, { x = sPos.x, y = sPos.y })  then
+        DrawCircleNextLvl(x, y, z, radius, 1, color, 75)       
+    end
+end  
 --[[Update the bar texts]]
 function RefreshKillableTexts()
-            if ((os.clock() - lastrefresh) > 0.3) and Menu.Drawing.DrawDamage then
-                        for i=1, heroManager.iCount do
-                                   local enemy = heroManager:GetHero(i)
-                                   if ValidTarget(enemy) then
-                                               DamageToHeros[i] =  GetComboDamage(MainCombo, enemy)
-                                   end
-                        end
-                        lastrefresh = os.clock()
+    if ((os.clock() - lastrefresh) > 0.3) and AlistarMenu.Drawing.DrawDamage then
+        for i=1, heroManager.iCount do
+            local enemy = heroManager:GetHero(i)
+            if ValidTarget(enemy) then
+                DamageToHeros[i] =  GetComboDamage(MainCombo, enemy)
             end
+        end
+        lastrefresh = os.clock()
+    end
 end
  function GetComboDamage(Combo, Unit)
 	local totaldamage = 0
@@ -268,106 +285,88 @@ function GetDamage(Spell, Unit)
 		truedamage = 50 + 20 * myHero.level
 	end
 	return truedamage
-end
+end    
     
-            function OnTick()
-            OnTickChecks()
-			
-            -- TS
-			ts:update()
-			Target = ts.target
-                        -- combo orbwalk
-                        if Menu.Combo.Enabled then
-                                   Combo(target)
-                                   if Menu.Combo.Move then
-                                               myHero:MoveTo(mousePos.x, mousePos.z)
-                                   end
-                        end
- 
-                        -- Auto Heal (E) when less than 75% HP
-                       -- if AlistarCH.autoheal and EREADY and myHero.health / myHero.maxHealth < 0.8 then
-                       --            CastSpell(_E)
-                       -- end
+function FullCombo()
+  -- combo orbwalk
+    if AlistarMenu.Combo.comboKey then
+        Combo(target)
+        if AlistarMenu.Combo.Move then
+			OrbWalking(Target)
+             --myHero:MoveTo(mousePos.x, mousePos.z)
+        end
+    end
+end	
+function OnSendPacket(p)
+    if AlistarMenu.Misc.BlockQ and p.header == Packet.headers.S_CAST then
+        local packet = Packet(p)
+        if packet:get('spellId') == _Q then
+            local hitnumber, hit = CheckEnemiesHitByQ()
+            if hitnumber == 0 then
+                p:Block()
             end
-           
-            function OnSendPacket(p)
-            if Menu.Misc.BlockQ and p.header == Packet.headers.S_CAST then
-                        local packet = Packet(p)
-                        if packet:get('spellId') == _Q then
-                                   local hitnumber, hit = CheckEnemiesHitByQ()
-                                   if hitnumber == 0 then
-                                               p:Block()
-                                   end
-                        end
-            end
+        end
+    end
 end
 --[[Check number of enemies hit by casting Q]]
- 
 function CheckEnemiesHitByQ()
- --           local enemieshit = {}
-   --         for i, enemy in ipairs(GetEnemyHeroes()) do
-     --                   local position = VP:GetPredictedPos(enemy, Qdelay)
-       --                 if ValidTarget(enemy) and  GetDistance(target) <= qRadius then
-         --                          table.insert(enemieshit, enemy)
-           --             end
-            --end
-            --return #enemieshit, enemieshit
+    local enemieshit = {}
+    for i, enemy in ipairs(GetEnemyHeroes()) do
+        local position = VP:GetPredictedPos(enemy, Qdelay)
+        if ValidTarget(enemy) and  GetDistance(target) <= qRadius then
+			table.insert(enemieshit, enemy)
+        end
+    end
+return #enemieshit, enemieshit
 end     
 function checkMana()
     return (myHero:GetSpellData(_Q).mana  + myHero:GetSpellData(_W).mana)  <= myHero.mana
 end
 function OnDraw()
-            if Menu.Drawing.Qrange then
-                        DrawCircle2(myHero.x, myHero.y, myHero.z, qRadius, ARGB(255, 0, 255, 0))
+	if AlistarMenu.Drawing.Qrange then
+      DrawCircle(myHero.x, myHero.y, myHero.z, qRange, ARGB(255, 0, 255, 0))
+    end
+    if AlistarMenu.Drawing.Wrange then
+       DrawCircle(myHero.x, myHero.y, myHero.z, wRange, ARGB(255,0,255,0))
+    end         
+    if SelectedTarget ~= nil and ValidTarget(SelectedTarget) then
+        DrawCircle(SelectedTarget.x, SelectedTarget.y, SelectedTarget.z, 100, ARGB(255,255,0,0))
+    end
+	if AlistarMenu.Drawing.ComboPossible then
+		if QREADY == READY and WREADY == READY and checkMana() then
+			DrawText("You can combo!", 18, 100, 140, 0x00FF00)
+		else
+			-- DrawText("Combo in" myHero.mana - (QMana + WMana), 18, 100, 140, 0xFF0000)
+		end
+	end
+-- Enemies Circles
+    if AlistarMenu.Drawing.drawcirclests and not myHero.dead then
+        if ts.target ~= nil then
+            for j=0, 5 do
+                if GetDistance(ts.target) > wRange / 2 then
+                    DrawCircle(ts.target.x, ts.target.y, ts.target.z, 100 + j*1.5, 0xFF0000) -- Target red circle when they are in W range.
+                else
+                    DrawCircle(ts.target.x, ts.target.y, ts.target.z, 100 + j*1.5, 0x00FF00) -- Target green circle for a succeful W+Q combo.
+                end
             end
-            if Menu.Drawing.Wrange then
-                        DrawCircle2(myHero.x, myHero.y, myHero.z, wRange, ARGB(255,0,255,0))
+        end
+     end  
+--[[HealthBar HP tracker]]
+    if AlistarMenu.Drawing.DrawDamage then
+        for i=1, heroManager.iCount do
+            local enemy = heroManager:GetHero(i)
+            if ValidTarget(enemy) then
+                if DamageToHeros[i] ~= nil then
+                    RemainingHealth = enemy.health - DamageToHeros[i]
+                end
+                if RemainingHealth ~= nil then
+                    DrawIndicator(enemy, math.floor(RemainingHealth))
+                    DrawOnHPBar(enemy, math.floor(RemainingHealth))
+                end
             end
-            
-            if SelectedTarget ~= nil and ValidTarget(SelectedTarget) then
-                        DrawCircle2(SelectedTarget.x, SelectedTarget.y, SelectedTarget.z, 100, ARGB(255,255,0,0))
-            end
-			if QREADY == READY and WREADY == READY and checkMana() then
-                                   DrawText("You can combo!", 18, 100, 140, 0xFF0000)
-                        else
-                                  -- DrawText("Combo in" myHero.mana - (QMana + WMana), 18, 100, 140, 0x00FF00)
-             end
-			end
-			-- Alistar Circles
-       
-
-                        -- Enemies Circles
-            if Menu.Drawing.drawcirclests and not myHero.dead then
-                        if ts.target ~= nil then
-                                   for j=0, 5 do
-                                               if GetDistance(ts.target) > wRange / 2 then
-                                                           DrawCircle(ts.target.x, ts.target.y, ts.target.z, 100 + j*1.5, 0xFF0000) -- Target red circle when they are in W range.
-                                               else
-                                                           DrawCircle(ts.target.x, ts.target.y, ts.target.z, 100 + j*1.5, 0x00FF00) -- Target green circle for a succeful W+Q combo.
-                                               end
-                                   end
-                        end
-            end
-           
-                        --[[HealthBar HP tracker]]
-            if Menu.Drawing.DrawDamage then
-                        for i=1, heroManager.iCount do
-                                   local enemy = heroManager:GetHero(i)
-                                   if ValidTarget(enemy) then
-                                               if DamageToHeros[i] ~= nil then
-                                                           RemainingHealth = enemy.health - DamageToHeros[i]
-                                               end
-                                               if RemainingHealth ~= nil then
-                                                           DrawIndicator(enemy, math.floor(RemainingHealth))
-                                                           DrawOnHPBar(enemy, math.floor(RemainingHealth))
-                                               end
-                                   end
-                        end
-            end
-            if SelectedTarget ~= nil and ValidTarget(SelectedTarget) then
-                        DrawCircle2(SelectedTarget.x, SelectedTarget.y, SelectedTarget.z, 100, ARGB(255,255,0,0))
-            end
-           
-
-
-
+        end
+     end
+    if SelectedTarget ~= nil and ValidTarget(SelectedTarget) then
+        DrawCircle2(SelectedTarget.x, SelectedTarget.y, SelectedTarget.z, 100, ARGB(255,255,0,0))
+    end
+end
