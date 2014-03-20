@@ -1,9 +1,4 @@
---[[
-                        Alistar Combo
-                                   - Alistar Skills circles range and radius
-                                   - Enemies circles
-                                   - Auto Combo (W) + (Q)
-]]--
+
 if myHero.charName ~= "Alistar" then return end
 local version = "1.00"
 local qRadius = 365 -- q radius
