@@ -1,3 +1,9 @@
+--[[
+                        Alistar Combo
+                                   - Alistar Skills circles range and radius
+                                   - Enemies circles
+                                   - Auto Combo (W) + (Q)
+]]--
 if myHero.charName ~= "Alistar" then return end
 local version = "1.00"
 local qRadius = 365 -- q radius
@@ -184,7 +190,7 @@ function Combo(target)
          CastSpell(_Q)
     end
     -- If (W) and (Q) are on cd then AutoAttack
-    if ts.target ~= nil and WREADY ~= READY and GetDistance(ts.target) < wRange and GetDistance(ts.target) > qRadius - 10 then
+    if ts.target ~= nil and WREADY ~= READY or QREADY ~= READY  then
         myHero:Attack(ts.target)
     end
 
