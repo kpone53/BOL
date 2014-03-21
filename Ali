@@ -41,9 +41,7 @@ local InterruptList =
 function OnLoad()
 	allyHeroes = GetAllyHeroes()
 	AlistarMenu()
-    --[[Target]]
-	ts = TargetSelector(TARGET_CLOSEST, wRange, DAMAGE_MAGIC)
-    ts.name = "Alistar"      
+    
     if myHero:GetSpellData(SUMMONER_1).name:find("SummonerDot") then
         _IGNITE = SUMMONER_1
     elseif myHero:GetSpellData(SUMMONER_2).name:find("SummonerDot") then
@@ -137,6 +135,9 @@ function AlistarMenu()
 		--AlistarMenu.Drawing:permaShow("drawcirclests")
 		--AlistarMenu.Drawing:permaShow("ComboPossible")		
 		AlistarMenu:addParam("Version", "Version", SCRIPT_PARAM_INFO, version)
+		--[[Target]]
+		ts = TargetSelector(TARGET_CLOSEST, wRange, DAMAGE_MAGIC)
+		ts.name = "Alistar"
 		AlistarMenu:addTS(ts)
 end
  --Based on Manciuzz Orbwalker http://pastebin.com/jufCeE0e
