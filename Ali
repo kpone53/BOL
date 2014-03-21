@@ -367,7 +367,4 @@ function OnDraw()
             end
         end
      end
-    if SelectedTarget ~= nil and ValidTarget(SelectedTarget) then
-        DrawCircle2(SelectedTarget.x, SelectedTarget.y, SelectedTarget.z, 100, ARGB(255,255,0,0))
-    end
 end
