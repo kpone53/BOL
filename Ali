@@ -31,8 +31,6 @@ local SelectedTarget = nil
 local DamageToHeros = {}
 local lastrefresh = 0
 require "VPrediction"
-local informationTable = {}
-local spellExpired = true
 local InterruptList =
     {
     ["Katarina"] = "KatarinaR",
@@ -43,7 +41,6 @@ local InterruptList =
 function OnLoad()
 	allyHeroes = GetAllyHeroes()
 	AlistarMenu()
-    
     if myHero:GetSpellData(SUMMONER_1).name:find("SummonerDot") then
         _IGNITE = SUMMONER_1
     elseif myHero:GetSpellData(SUMMONER_2).name:find("SummonerDot") then
@@ -52,7 +49,13 @@ function OnLoad()
         _IGNITE = nil
     end
     VP = VPrediction()
-    PrintChat("<font color=\"#81BEF7\">[BigAli] Load succesfully!</font>")
+    PrintChat("<font color=\"#81BEF7\">[Alistar] Command: Load succesfully!</font>")
+		--- Orbwalking Vars ---
+	--->
+		lastAnimation = "Run"
+		lastAttack = 0
+		lastAttackCD = 0
+		lastWindUpTime = 0
 end
 function OnTick()
 	OnTickChecks()	
@@ -61,8 +64,6 @@ function OnTick()
 	ts:update()
 	Target = ts.target
 	-- Menu Vars --
-	ComboKey =   AlistarMenu.Combo.comboKey
-	if comboKey then FullCombo() end
 	if AlistarMenu.Misc.autoignite then AutoIgnite() end
     -- Auto Heal (E) when less than 75% HP
     -- if AlistarCH.autoheal and EREADY and myHero.health / myHero.maxHealth < 0.8 then
@@ -77,21 +78,27 @@ function OnTickChecks()
     QMana = myHero:GetSpellData(_Q).mana
     WMana = myHero:GetSpellData(_W).mana          
     
-    if AlistarMenu.Misc.UseE then       
+    if AlistarMenu.Combo.FullCombo then
+		FullCombo()
+	end		
+	if AlistarMenu.Misc.UseE then       
 		for _, ally in pairs(GetAllyHeroes()) do 
 			if GetDistance(ally) <= eRange and (ally.health / ally.maxHealth) < 0.8 then
 				CastSpell(_E)
 			end
 		end
 	end
-
+	if AlistarMenu.Misc.UseSelfE then      
+        if (myHero.health / myHero.maxHealth) <= 0.75 and EReady then
+            CastSpell(_E)
+        end
+	end
     if AlistarMenu.Misc.UseQ > 1 and QREADY then
         local hitcount, hit = CheckEnemiesHitByQ()
             if hitcount >= (AlistarMenu.Misc.UseQ -1) then
                 CastSpell(_Q)
             end                 
     end
-	
     if AlistarMenu.Misc.Interrupt then
         for i, unit in ipairs(GetEnemyHeroes()) do
             for champion, spell in pairs(InterruptList) do
@@ -110,14 +117,15 @@ function AlistarMenu()
 		AlistarMenu.Combo:addParam("UseW", "Use W", SCRIPT_PARAM_ONOFF, true)
 		AlistarMenu.Combo:addParam("UseQN", "Use Q at least in", SCRIPT_PARAM_LIST, 1, { "1 target", "2 targets", "3 targets", "4 targets" , "5 targets"})
 		AlistarMenu.Combo:addParam("Move", "Move to mouse", SCRIPT_PARAM_ONOFF, false)
-		AlistarMenu.Combo:addParam("comboKey", "Combo", SCRIPT_PARAM_ONKEYDOWN, false, 32)
-		AlistarMenu.Combo:permaShow("comboKey") 
+		AlistarMenu.Combo:addParam("FullCombo", "Combo", SCRIPT_PARAM_ONKEYDOWN, false, 32)
+		AlistarMenu.Combo:permaShow("FullCombo") 
 		--[[Misc]]
 		AlistarMenu:addSubMenu("Misc", "Misc")
 		AlistarMenu.Misc:addParam("UseQ", "Auto-Q if it will hit", SCRIPT_PARAM_LIST, 1, { "No", ">0 targets", ">1 targets", ">2 targets", ">3 targets", ">4 targets" })
 		AlistarMenu.Misc:addParam("Interrupt", "Auto interrupt important spells", SCRIPT_PARAM_ONOFF, false)
 		AlistarMenu.Misc:addParam("BlockQ", "Block Q if it is not going to hit", SCRIPT_PARAM_ONOFF, false)
-		AlistarMenu.Misc:addParam("UseE", "Use E", SCRIPT_PARAM_ONOFF, true)
+		AlistarMenu.Misc:addParam("UseE", "Heal ally if under 80% health", SCRIPT_PARAM_ONOFF, true)
+		AlistarMenu.Misc:addParam("UseSelfE", "Heal self if under 75%", SCRIPT_PARAM_ONOFF, true)
 		AlistarMenu.Misc:addParam("PushAwayGapclosers", "Push Gapclosers Away", SCRIPT_PARAM_ONOFF, true)
 		AlistarMenu.Misc:addParam("autoIgnite", "Auto Ignite", SCRIPT_PARAM_ONOFF, true)
 		--[[Harassing]]
@@ -136,7 +144,7 @@ function AlistarMenu()
 		AlistarMenu.Drawing:addParam("ComboPossible", "Drawtext if combo if combo is possible", SCRIPT_PARAM_ONOFF, true)
 		--AlistarMenu.Drawing:permaShow("Drawing")
 		--AlistarMenu.Drawing:permaShow("drawcirclests")
-		--AlistarMenu.Drawing:permaShow("ComboPossible")		
+		AlistarMenu.Drawing:permaShow("ComboPossible")		
 		AlistarMenu:addParam("Version", "Version", SCRIPT_PARAM_INFO, version)
 		--[[Target]]
 		ts = TargetSelector(TARGET_CLOSEST, wRange, DAMAGE_MAGIC)
@@ -200,9 +208,7 @@ function Combo(target)
     end
 
 end
- 
-
---[[       Credits to zikkah        ]]
+--[[Credits to zikkah]]
 function GetHPBarPos(enemy)
     enemy.barData = GetEnemyBarData()
     local barPos = GetUnitHPBarPos(enemy)
@@ -293,14 +299,18 @@ function GetDamage(Spell, Unit)
 end    
     
 function FullCombo()
+	if ValidTarget(Target) then
   -- combo orbwalk
-    if AlistarMenu.Combo.comboKey then
         Combo(target)
         if AlistarMenu.Combo.Move then
 			OrbWalking(Target)
              --myHero:MoveTo(mousePos.x, mousePos.z)
         end
-    end
+    else
+		if AlistarMenu.Combo.Move then
+					moveToCursor()
+		end
+	end
 end	
 function OnSendPacket(p)
     if AlistarMenu.Misc.BlockQ and p.header == Packet.headers.S_CAST then
@@ -345,8 +355,7 @@ function OnDraw()
 		end
 	end
 -- Enemies Circles
-    if AlistarMenu.Drawing.drawcirclests and not myHero.dead then
-        if ts.target ~= nil then
+    if AlistarMenu.Drawing.drawcirclests and ValidTarget(ts.target) and not myHero.dead then
             for j=0, 5 do
                 if GetDistance(ts.target) > wRange / 2 then
                     DrawCircle(ts.target.x, ts.target.y, ts.target.z, 100 + j*1.5, 0xFF0000) -- Target red circle when they are in W range.
@@ -354,7 +363,6 @@ function OnDraw()
                     DrawCircle(ts.target.x, ts.target.y, ts.target.z, 100 + j*1.5, 0x00FF00) -- Target green circle for a succeful W+Q combo.
                 end
             end
-        end
      end  
 --[[HealthBar HP tracker]]
     if AlistarMenu.Drawing.DrawDamage then
