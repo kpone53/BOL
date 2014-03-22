@@ -1,0 +1,39 @@
+--| OnLoad |--
+function OnLoad()
+    PrintChat("Super Macro ready to help")
+            Delay = 1000
+            Tick = GetTickCount()
+end
+ 
+
+function OnTick()
+if GetTickCount() - Tick < Delay then return end
+            Tick = GetTickCount()
+    chatmacros()
+end
+ 
+--| Chat Macros |--
+function chatmacros()
+  if IsKeyDown(49)
+    then SendChat("OB")..GetGameTimer()+300000
+            end
+  if IsKeyDown(50)
+    then SendChat("OR")..GetGameTimer()+300000
+            end     
+  if IsKeyDown(51)
+    then SendChat("TB")..GetGameTimer()+300000
+            end     
+  if IsKeyDown(52)
+    then SendChat("TR")..GetGameTimer()+300000
+            end     
+  if IsKeyDown(53)
+    then SendChat("Dragon")..GetGameTimer()+360000 
+            end     
+  if IsKeyDown(54) then 
+		SendChat("Baron")..GetGameTimer()+420000 
+         end     
+	if IsKeyDown(16) and IsKeyDown(69)
+        then SendChat("MIA")
+    end     
+           
+end
