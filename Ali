@@ -71,9 +71,9 @@ function OnTick()
     -- end
 end  
 function OnTickChecks()
-    QREADY = (myHero:CanUseSpell(_Q) == READY) or (myHero:GetSpellData(_Q).currentCd < 1)
-    WREADY = (myHero:CanUseSpell(_W) == READY) or (myHero:GetSpellData(_W).currentCd < 1)
-    EREADY = (myHero:CanUseSpell(_E) == READY) or (myHero:GetSpellData(_E).currentCd < 1)
+    QREADY = (myHero:CanUseSpell(_Q) == READY) 
+    WREADY = (myHero:CanUseSpell(_W) == READY)
+    EREADY = (myHero:CanUseSpell(_E) == READY)
     IGNITEREADY = _IGNITE and myHero:CanUseSpell(_IGNITE) == READY or false
     QMana = myHero:GetSpellData(_Q).mana
     WMana = myHero:GetSpellData(_W).mana          
@@ -83,13 +83,13 @@ function OnTickChecks()
 	end		
 	if AlistarMenu.Misc.UseE then       
 		for _, ally in pairs(GetAllyHeroes()) do 
-			if GetDistance(ally) <= eRange and (ally.health / ally.maxHealth) < 0.8 then
+			if GetDistance(ally) < eRange and (ally.health / ally.maxHealth) < 0.8 then
 				CastSpell(_E)
 			end
 		end
 	end
 	if AlistarMenu.Misc.UseSelfE then      
-        if (myHero.health / myHero.maxHealth) <= 0.75 and EReady then
+        if (myHero.health / myHero.maxHealth) <= 0.75 then
             CastSpell(_E)
         end
 	end
@@ -142,8 +142,8 @@ function AlistarMenu()
 		AlistarMenu.Drawing:addParam("drawcirclests", "Combo helper", SCRIPT_PARAM_ONOFF, true)
 		AlistarMenu.Drawing:addParam("DrawDamage", "Draw damage after combo in healthbars", SCRIPT_PARAM_ONOFF, true)
 		AlistarMenu.Drawing:addParam("ComboPossible", "Drawtext if combo if combo is possible", SCRIPT_PARAM_ONOFF, true)
-		--AlistarMenu.Drawing:permaShow("Drawing")
-		--AlistarMenu.Drawing:permaShow("drawcirclests")
+		AlistarMenu:permaShow("Drawing")
+		AlistarMenu.Drawing:permaShow("drawcirclests")
 		AlistarMenu.Drawing:permaShow("ComboPossible")		
 		AlistarMenu:addParam("Version", "Version", SCRIPT_PARAM_INFO, version)
 		--[[Target]]
@@ -195,7 +195,7 @@ end
 -- Combo--
 function Combo(target)
      -- Combo (W) and (Q) when both are ready
-     if ts.target ~= nil and WREADY and GetDistance(ts.target) <= wRange then
+     if ts.target ~= nil and WREADY and QREADY and GetDistance(ts.target) <= wRange then
         CastSpell(_W,ts.target)
      end
     -- To not waste a skill and mana, check if the target are in the radius of the skill
