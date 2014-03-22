@@ -52,7 +52,7 @@ function OnLoad()
         _IGNITE = nil
     end
     VP = VPrediction()
-    PrintChat("<font color=\"#81BEF7\">[Alistar] Command: Load succesfully!</font>")
+    PrintChat("<font color=\"#81BEF7\">[BigAli] Load succesfully!</font>")
 end
 function OnTick()
 	OnTickChecks()	
