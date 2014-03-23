@@ -1,19 +1,17 @@
---| OnLoad |--
+
 function OnLoad()
-    PrintChat("Super Macro ready to help")
+    PrintChat("Jungle Countdown Helper ready to help")
             Delay = 1000
             Tick = GetTickCount()
 end
- 
 
 function OnTick()
 if GetTickCount() - Tick < Delay then return end
             Tick = GetTickCount()
-    chatmacros()
+    CountdownHelper()
 end
- 
---| Chat Macros |--
-function chatmacros()
+
+function CountdownHelper()
   if IsKeyDown(49)
     then SendChat("OB")..GetGameTimer()+300000
             end
@@ -33,7 +31,7 @@ function chatmacros()
 		SendChat("Baron")..GetGameTimer()+420000 
          end     
 	if IsKeyDown(16) and IsKeyDown(69)
-        then SendChat("MIA")
+        then SendChat("Miss")
     end     
            
 end
