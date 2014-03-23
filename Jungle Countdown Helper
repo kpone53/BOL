@@ -1,37 +1,104 @@
-
+local version = "1.0"
 function OnLoad()
     PrintChat("Jungle Countdown Helper ready to help")
-            Delay = 1000
+            Delay = 500
             Tick = GetTickCount()
+	CountdownHelperMenu()
 end
 
 function OnTick()
-if GetTickCount() - Tick < Delay then return end
-            Tick = GetTickCount()
+  local minutes = GetInGameTimer() / 60
+  local seconds = math.round((GetInGameTimer() % 60),0)
+ if GetTickCount() - Tick < Delay then return end
+     Tick = GetTickCount()
     CountdownHelper()
+	if seconds<10 then
+	seconds="0"..seconds
+	end
+	
 end
 
 function CountdownHelper()
-  if IsKeyDown(49)
-    then SendChat("OB")..GetGameTimer()+300000
-            end
-  if IsKeyDown(50)
-    then SendChat("OR")..GetGameTimer()+300000
-            end     
-  if IsKeyDown(51)
-    then SendChat("TB")..GetGameTimer()+300000
-            end     
-  if IsKeyDown(52)
-    then SendChat("TR")..GetGameTimer()+300000
-            end     
-  if IsKeyDown(53)
-    then SendChat("Dragon")..GetGameTimer()+360000 
-            end     
-  if IsKeyDown(54) then 
-		SendChat("Baron")..GetGameTimer()+420000 
-         end     
-	if IsKeyDown(16) and IsKeyDown(69)
-        then SendChat("Miss")
-    end     
-           
+  if CountdownHelperMenu.OB then
+	OB()
+  end
+  if CountdownHelperMenu.OR then
+	OR()/
+  end
+  if CountdownHelperMenu.TB then
+	TB()
+  end
+  if CountdownHelperMenu.TR then
+	TR()
+  end  
+  if CountdownHelperMenu.Dragon then
+	Dragon()
+  end
+  if CountdownHelperMenu.Baron then
+	Baron()
+  end
+   if CountdownHelperMenu.Miss then
+	Miss()
+  end  
+end
+function CountdownHelperMenu()
+	CountdownHelperMenu = scriptConfig("Jungle Countdown Helper", "JCH")	
+		CountdownHelperMenu:addParam("OB", "OB", SCRIPT_PARAM_ONKEYDOWN, true, 97)
+		CountdownHelperMenu:addParam("OR", "OR", SCRIPT_PARAM_ONKEYDOWN, true, 98)
+		CountdownHelperMenu:addParam("TB", "TB", SCRIPT_PARAM_ONKEYDOWN, true, 100)
+		CountdownHelperMenu:addParam("TR", "TR", SCRIPT_PARAM_ONKEYDOWN, true, 101)
+		CountdownHelperMenu:addParam("Dragon", "Dragon", SCRIPT_PARAM_ONKEYDOWN, true, 99)
+		CountdownHelperMenu:addParam("Baron", "Baron", SCRIPT_PARAM_ONKEYDOWN, true, 102)
+		CountdownHelperMenu:addParam("Miss", "Miss", SCRIPT_PARAM_ONKEYDOWN, true, 96)
+		CountdownHelperMenu:addParam("Version", "Version", SCRIPT_PARAM_INFO, version)
+end
+
+function OB()
+	if GetInGameTimer()% 60>30 then
+	SendChat("OB "..(math.round((GetInGameTimer() / 60),0)+4)..":"..seconds)
+	else
+	SendChat("OB "..(math.round((GetInGameTimer() / 60),0)+5)..":"..math.round((GetInGameTimer() % 60),0))
+	end
+end
+function OR()
+if GetInGameTimer()% 60>30 then
+	SendChat("OR "..(math.round((GetInGameTimer() / 60),0)+4)..":"..math.round((GetInGameTimer() % 60),0))
+	else
+	SendChat("OR "..(math.round((GetInGameTimer() / 60),0)+5)..":"..math.round((GetInGameTimer() % 60),0))
+	end
+end
+function TB()
+if GetInGameTimer()% 60>30 then
+	SendChat("TB "..(math.round((GetInGameTimer() / 60),0)+4)..":"..math.round((GetInGameTimer() % 60),0))
+	else
+	SendChat("TB "..(math.round((GetInGameTimer() / 60),0)+5)..":"..math.round((GetInGameTimer() % 60),0))
+	end
+end
+function TR()
+if GetInGameTimer()% 60>30 then
+	SendChat("TR "..(math.round((GetInGameTimer() / 60),0)+4)..":"..math.round((GetInGameTimer() % 60),0))
+	else
+	SendChat("TR "..(math.round((GetInGameTimer() / 60),0)+5)..":"..math.round((GetInGameTimer() % 60),0))
+	end
+end
+function Dragon()
+if GetInGameTimer()% 60>30 then
+	SendChat("Dragon "..(math.round((GetInGameTimer() / 60),0)+5)..":"..math.round((GetInGameTimer() % 60),0))
+	else
+	SendChat("Dragon "..(math.round((GetInGameTimer() / 60),0)+6)..":"..math.round((GetInGameTimer() % 60),0))
+	end
+end
+function Baron()
+if GetInGameTimer()% 60>30 then
+	SendChat("Baron "..(math.round((GetInGameTimer() / 60),0)+6)..":"..math.round((GetInGameTimer() % 60),0))
+	else
+	SendChat("Baron "..(math.round((GetInGameTimer() / 60),0)+7)..":"..math.round((GetInGameTimer() % 60),0))
+	end
+end
+function Miss()
+SendChat("Miss")
+end
+function round(num, idp)
+  local mult = 10^(idp or 0)
+  return math.floor(num * mult + 0.5) / mult
 end
