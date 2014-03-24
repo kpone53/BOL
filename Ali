@@ -1,8 +1,8 @@
 --[[
-                        Alistar Combo
-                                   - Alistar Skills circles range and radius
-                                   - Enemies circles
-                                   - Auto Combo (W) + (Q)
+    Alistar Combo
+        - Alistar Skills circles range and radius
+        - Enemies circles
+        - Auto Combo (W) + (Q)
 ]]--
 if myHero.charName ~= "Alistar" then return end
 local version = "1.00"
@@ -18,13 +18,13 @@ local Qdamage = {60, 105, 150, 195, 240}
 local Qscaling = 0.5
 local Wdamage = {55, 110, 165, 220, 275}
 local Wscaling = 0.7
-local MainCombo = {_W, _Q, _AA, _AA, _IGNITE}
+local MainCombo = {_W, _Q, _IGNITE, _AA, _AA}
 --[[CDS]]
 local QREADY = true
 local WREADY = true
 local EREADY = true
 local IGNITEREADY = true
-local VP
+local VP = nil
 local AlistarMenu = nil
 local LastChampionSpell = {}
 local SelectedTarget = nil
@@ -64,17 +64,17 @@ function OnTick()
 	ts:update()
 	Target = ts.target
 	-- Menu Vars --
-	if AlistarMenu.Misc.autoignite then AutoIgnite() end
+	if AlistarMenu.Misc.AutoIgnite then AutoIgnite() end
     -- Auto Heal (E) when less than 75% HP
     -- if AlistarCH.autoheal and EREADY and myHero.health / myHero.maxHealth < 0.8 then
     -- CastSpell(_E)
     -- end
 end  
 function OnTickChecks()
-    QREADY = (myHero:CanUseSpell(_Q) == READY) 
-    WREADY = (myHero:CanUseSpell(_W) == READY)
-    EREADY = (myHero:CanUseSpell(_E) == READY)
-    IGNITEREADY = _IGNITE and myHero:CanUseSpell(_IGNITE) == READY or false
+    QREADY = ((myHero:CanUseSpell(_Q) == READY) or (myHero:GetSpellData(_Q).level > 0))
+    WREADY = ((myHero:CanUseSpell(_W) == READY) or (myHero:GetSpellData(_W).level > 0))
+    EREADY = (myHero:CanUseSpell(_E) == READY) or (myHero:GetSpellData(_E).level > 0))
+	iReady = (ignite ~= nil and myHero:CanUseSpell(ignite) == READY)
     QMana = myHero:GetSpellData(_Q).mana
     WMana = myHero:GetSpellData(_W).mana          
     
@@ -127,14 +127,7 @@ function AlistarMenu()
 		AlistarMenu.Misc:addParam("UseE", "Heal ally if under 80% health", SCRIPT_PARAM_ONOFF, true)
 		AlistarMenu.Misc:addParam("UseSelfE", "Heal self if under 75%", SCRIPT_PARAM_ONOFF, true)
 		AlistarMenu.Misc:addParam("PushAwayGapclosers", "Push Gapclosers Away", SCRIPT_PARAM_ONOFF, true)
-		AlistarMenu.Misc:addParam("autoIgnite", "Auto Ignite", SCRIPT_PARAM_ONOFF, true)
-		--[[Harassing]]
-		--AlistarMenu:addSubMenu("Harass", "Harass")
-		--AlistarMenu.Harass:addParam("UseQ", "Use Q", SCRIPT_PARAM_ONOFF , true)
-		--AlistarMenu.Harass:addParam("UseW", "Use W", SCRIPT_PARAM_ONOFF, false)
-		--AlistarMenu.Harass:addParam("ManaCheck", "Don't harass if mana < %", SCRIPT_PARAM_SLICE, 0, 0, 100)
-		--AlistarMenu.Harass:addParam("Enabled", "Harass!", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
-		--AlistarMenu.Harass:addParam("Enabled2", "Harass (TOGGLE)!", SCRIPT_PARAM_ONKEYTOGGLE, false, string.byte("L"))
+		AlistarMenu.Misc:addParam("AutoIgnite", "Auto Ignite", SCRIPT_PARAM_ONOFF, true)
 		--[[Drawing]]
 		AlistarMenu:addSubMenu("Drawing", "Drawing")
 		AlistarMenu.Drawing:addParam("Qrange", "Draw Q range", SCRIPT_PARAM_ONOFF, true)
@@ -184,14 +177,15 @@ end
 function OnAnimation(unit,animationName)
     if unit.isMe and lastAnimation ~= animationName then lastAnimation = animationName end
 end
- -- Auto Ignite --
+-- Auto Ignite --
 function AutoIgnite()
 	if Target ~= nil then
-		if Target.health <= 50 + 20 * myHero.level and GetDistance(Target) <= 600 then
-			if IGNITEREADY then CastSpell(ignite, Target) end
+		if Target.health <= (50 + 20 * myHero.level) and GetDistance(Target) <= 600 then
+			if iReady then CastSpell(ignite, Target) end
 		end
 	end
 end
+
 -- Combo--
 function Combo(target)
      -- Combo (W) and (Q) when both are ready
@@ -290,9 +284,7 @@ function GetDamage(Spell, Unit)
 		truedamage = myHero:CalcMagicDamage(Unit, Qdamage[myHero:GetSpellData(_Q).level] + myHero.ap * Qscaling)
 	elseif Spell == _W and myHero:GetSpellData(_W).level ~= 0 and WREADY then
 		truedamage = myHero:CalcMagicDamage(Unit, Wdamage[myHero:GetSpellData(_W).level] + myHero.ap * Wscaling)
-	--elseif Spell == _AA and myHero:GetSpellData(_AA).level ~= 0 then
-		--truedamage = myHero:CalcDamage(Unit, myHero.totalDamage) + myHero:CalcMagicDamage(Unit, AAdamage[myHero.level] + myHero.ap * AAscaling)
-	elseif Spell == _IGNITE and _IGNITE and IGNITEREADY then
+	elseif Spell == _IGNITE and iReady then
 		truedamage = 50 + 20 * myHero.level
 	end
 	return truedamage
@@ -351,7 +343,7 @@ function OnDraw()
 		if QREADY == READY and WREADY == READY and checkMana() then
 			DrawText("You can combo!", 18, 100, 140, 0x00FF00)
 		else
-			-- DrawText("Combo in" myHero.mana - (QMana + WMana), 18, 100, 140, 0xFF0000)
+			DrawText("Combo in "..(myHero.mana - (QMana + WMana)).." mana", 18, 100, 140, 0xFF0000)
 		end
 	end
 -- Enemies Circles
