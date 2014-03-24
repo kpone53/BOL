@@ -1,29 +1,23 @@
 local version = "1.0"
+
 function OnLoad()
     PrintChat("Jungle Countdown Helper ready to help")
-            Delay = 500
-            Tick = GetTickCount()
+    Delay = 500
+    Tick = GetTickCount()
 	CountdownHelperMenu()
 end
+function OnTick()	
 
-function OnTick()
-  local minutes = GetInGameTimer() / 60
-  local seconds = math.round((GetInGameTimer() % 60),0)
  if GetTickCount() - Tick < Delay then return end
-     Tick = GetTickCount()
-    CountdownHelper()
-	if seconds<10 then
-	seconds="0"..seconds
-	end
-	
+ Tick = GetTickCount()
+ CountdownHelper()
 end
-
 function CountdownHelper()
   if CountdownHelperMenu.OB then
 	OB()
   end
   if CountdownHelperMenu.OR then
-	OR()/
+	OR()
   end
   if CountdownHelperMenu.TB then
 	TB()
@@ -41,6 +35,7 @@ function CountdownHelper()
 	Miss()
   end  
 end
+---------- Menu----------
 function CountdownHelperMenu()
 	CountdownHelperMenu = scriptConfig("Jungle Countdown Helper", "JCH")	
 		CountdownHelperMenu:addParam("OB", "OB", SCRIPT_PARAM_ONKEYDOWN, true, 97)
@@ -52,53 +47,99 @@ function CountdownHelperMenu()
 		CountdownHelperMenu:addParam("Miss", "Miss", SCRIPT_PARAM_ONKEYDOWN, true, 96)
 		CountdownHelperMenu:addParam("Version", "Version", SCRIPT_PARAM_INFO, version)
 end
-
+-------End Menu-------------
+------ Function for timer calc-------
 function OB()
 	if GetInGameTimer()% 60>30 then
-	SendChat("OB "..(math.round((GetInGameTimer() / 60),0)+4)..":"..seconds)
+		if (GetInGameTimer() % 60)<10 then	 
+			SendChat("OB "..(math.round((GetInGameTimer() / 60),0)+4)..":0"..math.round((GetInGameTimer() % 60),0))
+	    else
+			SendChat("OB "..(math.round((GetInGameTimer() / 60),0)+4)..":"..math.round((GetInGameTimer() % 60),0)) 
+   		end	
 	else
-	SendChat("OB "..(math.round((GetInGameTimer() / 60),0)+5)..":"..math.round((GetInGameTimer() % 60),0))
+		if (GetInGameTimer() % 60)<10 then	 
+			SendChat("OB "..(math.round((GetInGameTimer() / 60),0)+5)..":0"..math.round((GetInGameTimer() % 60),0))
+	    else
+			SendChat("OB "..(math.round((GetInGameTimer() / 60),0)+5)..":"..math.round((GetInGameTimer() % 60),0))    	   	
+		end
 	end
 end
 function OR()
-if GetInGameTimer()% 60>30 then
-	SendChat("OR "..(math.round((GetInGameTimer() / 60),0)+4)..":"..math.round((GetInGameTimer() % 60),0))
+	if GetInGameTimer()% 60>30 then
+		if (GetInGameTimer() % 60)<10 then	 
+			SendChat("OR "..(math.round((GetInGameTimer() / 60),0)+4)..":0"..math.round((GetInGameTimer() % 60),0))
+		else
+			SendChat("OR "..(math.round((GetInGameTimer() / 60),0)+4)..":"..math.round((GetInGameTimer() % 60),0)) 
+		end	
 	else
-	SendChat("OR "..(math.round((GetInGameTimer() / 60),0)+5)..":"..math.round((GetInGameTimer() % 60),0))
+		if (GetInGameTimer() % 60)<10 then	 
+			SendChat("OR "..(math.round((GetInGameTimer() / 60),0)+5)..":0"..math.round((GetInGameTimer() % 60),0))
+		else
+			SendChat("OR "..(math.round((GetInGameTimer() / 60),0)+5)..":"..math.round((GetInGameTimer() % 60),0))    	   	
+		end
 	end
 end
 function TB()
-if GetInGameTimer()% 60>30 then
-	SendChat("TB "..(math.round((GetInGameTimer() / 60),0)+4)..":"..math.round((GetInGameTimer() % 60),0))
+	if GetInGameTimer()% 60>30 then
+		if (GetInGameTimer() % 60)<10 then	 
+			SendChat("TB "..(math.round((GetInGameTimer() / 60),0)+4)..":0"..math.round((GetInGameTimer() % 60),0))
+		else
+			SendChat("TB "..(math.round((GetInGameTimer() / 60),0)+4)..":"..math.round((GetInGameTimer() % 60),0)) 
+		end	
 	else
-	SendChat("TB "..(math.round((GetInGameTimer() / 60),0)+5)..":"..math.round((GetInGameTimer() % 60),0))
+		if (GetInGameTimer() % 60)<10 then	 
+			SendChat("TB "..(math.round((GetInGameTimer() / 60),0)+5)..":0"..math.round((GetInGameTimer() % 60),0))
+		else
+			SendChat("TB "..(math.round((GetInGameTimer() / 60),0)+5)..":"..math.round((GetInGameTimer() % 60),0))    	   	
+		end
 	end
 end
 function TR()
-if GetInGameTimer()% 60>30 then
-	SendChat("TR "..(math.round((GetInGameTimer() / 60),0)+4)..":"..math.round((GetInGameTimer() % 60),0))
+	if GetInGameTimer()% 60>30 then
+		if (GetInGameTimer() % 60)<10 then	 
+			SendChat("TR "..(math.round((GetInGameTimer() / 60),0)+4)..":0"..math.round((GetInGameTimer() % 60),0))
+		else
+			SendChat("TR "..(math.round((GetInGameTimer() / 60),0)+4)..":"..math.round((GetInGameTimer() % 60),0)) 
+		end	
 	else
-	SendChat("TR "..(math.round((GetInGameTimer() / 60),0)+5)..":"..math.round((GetInGameTimer() % 60),0))
+		if (GetInGameTimer() % 60)<10 then	 
+			SendChat("TR "..(math.round((GetInGameTimer() / 60),0)+5)..":0"..math.round((GetInGameTimer() % 60),0))
+		else
+			SendChat("TR "..(math.round((GetInGameTimer() / 60),0)+5)..":"..math.round((GetInGameTimer() % 60),0))    	   	
+		end
 	end
 end
 function Dragon()
-if GetInGameTimer()% 60>30 then
-	SendChat("Dragon "..(math.round((GetInGameTimer() / 60),0)+5)..":"..math.round((GetInGameTimer() % 60),0))
+	if GetInGameTimer()% 60>30 then
+		if (GetInGameTimer() % 60)<10 then	 
+			SendChat("Dragon "..(math.round((GetInGameTimer() / 60),0)+5)..":0"..math.round((GetInGameTimer() % 60),0))
+		else
+			SendChat("Dragon "..(math.round((GetInGameTimer() / 60),0)+5)..":"..math.round((GetInGameTimer() % 60),0)) 
+		end	
 	else
-	SendChat("Dragon "..(math.round((GetInGameTimer() / 60),0)+6)..":"..math.round((GetInGameTimer() % 60),0))
+		if (GetInGameTimer() % 60)<10 then	 
+			SendChat("Dragon "..(math.round((GetInGameTimer() / 60),0)+6)..":0"..math.round((GetInGameTimer() % 60),0))
+		else
+			SendChat("Dragon "..(math.round((GetInGameTimer() / 60),0)+6)..":"..math.round((GetInGameTimer() % 60),0))    	   	
+		end
 	end
 end
 function Baron()
-if GetInGameTimer()% 60>30 then
-	SendChat("Baron "..(math.round((GetInGameTimer() / 60),0)+6)..":"..math.round((GetInGameTimer() % 60),0))
+	if GetInGameTimer()% 60>30 then
+		if (GetInGameTimer() % 60)<10 then	 
+			SendChat("Baron "..(math.round((GetInGameTimer() / 60),0)+6)..":0"..math.round((GetInGameTimer() % 60),0))
+		else
+			SendChat("Baron "..(math.round((GetInGameTimer() / 60),0)+6)..":"..math.round((GetInGameTimer() % 60),0)) 
+		end	
 	else
-	SendChat("Baron "..(math.round((GetInGameTimer() / 60),0)+7)..":"..math.round((GetInGameTimer() % 60),0))
+		if (GetInGameTimer() % 60)<10 then	 
+			SendChat("Baron "..(math.round((GetInGameTimer() / 60),0)+7)..":0"..math.round((GetInGameTimer() % 60),0))
+		else
+			SendChat("Baron "..(math.round((GetInGameTimer() / 60),0)+7)..":"..math.round((GetInGameTimer() % 60),0))    	   	
+		end
 	end
 end
 function Miss()
 SendChat("Miss")
 end
-function round(num, idp)
-  local mult = 10^(idp or 0)
-  return math.floor(num * mult + 0.5) / mult
-end
+----- End Function for timer calc---------
