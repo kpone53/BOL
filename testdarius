@@ -1,0 +1,273 @@
+if myHero.charName ~= "Darius" then return end
+
+local version = 1
+local hemoTable = {}
+local Vilemaw, Nashor, Dragon, Golem1, Golem2, Lizard1, Lizard2 = nil
+function OnLoad()
+	Variables()
+	DariusMenu()
+	PrintChat("<font color='#C80046'>Darius  " .. version .. " Loaded!</font>")
+end
+-- Our Variables --
+function Variables()
+rangeQ = 425
+	rangeiQ= 270
+	rangeW = 145
+	rangeE = 540  
+	rangeR = 460 
+	AARange = 125
+
+	for i=0, heroManager.iCount, 1 do
+        local enemy = heroManager:GetHero(i)
+        if enemy and enemy.team ~= myHero.team then
+                enemy.stack = 0
+                table.insert(hemoTable,enemy)
+		end
+	end
+end
+function DariusMenu()
+DariusMenu = scriptConfig("DunkerDarius", "DunkerDarius")
+	DariusMenu:addSubMenu("Combo Options", "Combo")
+		DariusMenu.Combo:addParam("combo", "DunkerCombo", SCRIPT_PARAM_ONKEYDOWN, false, 32)
+		DariusMenu.Combo:addParam("useQ", "Use Q", SCRIPT_PARAM_ONOFF, true)
+		DariusMenu.Combo:addParam("useW", "Use W", SCRIPT_PARAM_ONOFF, true)
+		DariusMenu.Combo:addParam("useE", "Use E", SCRIPT_PARAM_ONOFF, true)
+		DariusMenu.Combo:addParam("useR", "Use R", SCRIPT_PARAM_ONOFF, true)
+	DariusMenu:addSubMenu("Kill Steal Options", "KS")
+		DariusMenu.KS:addParam("alwaysKS", "Enable KS Mode", SCRIPT_PARAM_ONOFF, true)
+		DariusMenu.KS:addParam("qKS", "KS With Q", SCRIPT_PARAM_ONOFF, true)
+		DariusMenu.KS:addParam("wKS", "KS With W", SCRIPT_PARAM_ONOFF, true)
+		DariusMenu.KS:addParam("rKS", "KS With R", SCRIPT_PARAM_ONOFF, true)
+	DariusMenu:addSubMenu("Other Options", "Other")
+		DariusMenu.Other:addParam("moveToMouse", "Move To Mouse", SCRIPT_PARAM_ONOFF, true)
+		DariusMenu.Other:addParam("stealJungle", "Steal Jungle", SCRIPT_PARAM_ONOFF, true)
+	DariusMenu:addSubMenu("Draw Options", "Drawing")
+		DariusMenu.Drawing:addParam("drawTarget", "Draw Target", SCRIPT_PARAM_ONOFF, true)
+		DariusMenu.Drawing:addParam("drawQ", "Draw Q Range", SCRIPT_PARAM_ONOFF, true)
+		DariusMenu.Drawing:addParam("drawW", "Draw W Range", SCRIPT_PARAM_ONOFF, true)
+		DariusMenu.Drawing:addParam("drawE", "Draw E Range", SCRIPT_PARAM_ONOFF, true)
+		DariusMenu.Drawing:addParam("drawR", "Draw R Range", SCRIPT_PARAM_ONOFF, true)
+
+	--[[Target]]
+	ts = TargetSelector(TARGET_CLOSEST, 1300, DAMAGE_MAGIC)
+	ts.name = "Darius"
+	DariusMenu:addTS(ts)
+end
+function OnTick()
+  ts:update();
+  Target = ts.target
+
+	if DariusMenu.Combo.combo then
+		Combo()
+	end
+	if DariusMenu.KS.alwaysKS or DariusMenu.Combo.useR then
+		KS()
+	end
+	if DariusMenu.Other.stealJungle then
+		stealJungle()
+	end
+
+end
+
+function KS()
+	for i=1, heroManager.iCount do
+		local T = heroManager:getHero(i)
+		local multiplier = 1
+		if GetDistance(T) < 550 then
+			  for i, enemy in pairs(hemoTable) do
+		        if enemy.name == T.name then
+		            multiplier = GetMultiplier(enemy.stack)
+		        end
+			end
+			local qDmg = getDmg("Q", T, myHero)
+			local rDmg = multiplier * getDmg("R", T, myHero)
+			local wDmg = GetWMultiplier(myHero:GetSpellData(_W).level) * getDmg("AD", T, myHero)
+			if T.health < rDmg and GetDistance(T) < rangeR and not T.dead and DariusMenu.KS.rKS or DariusMenu.Combo.useR then
+				CastSpell(_R, T)
+			end
+			if T.health < qDmg and GetDistance(T) < rangeQ and not T.dead and DariusMenu.KS.qKS then
+				CastSpell(_Q)
+			end
+			if T.health < wDmg and GetDistance(T) < rangeW and not T.dead and DariusMenu.KS.wKS then
+				CastSpell(_W)
+				myHero:Attack(T)
+			end
+		end
+	end
+end
+
+function Combo()
+	if Target == nil and DariusMenu.Other.moveToMouse then
+		moveToCursor()
+		else if Target ~= nil and DariusMenu.Other.moveToMouse then
+			if GetDistance(Target) > (AARange + 10) then
+				moveToCursor()
+			else
+				myHero:Attack(Target)
+		end
+	end
+		if Target ~= nil then
+			if GetDistance(Target) < (rangeE - 20) then
+				if myHero:CanUseSpell(_W) and GetDistance(Target) < rangeW and DariusMenu.Combo.useW then
+					CastSpell(_W)
+					myHero:Attack(Target)
+				else
+					if myHero:CanUseSpell(_Q) and GetDistance(Target) < rangeQ and DariusMenu.Combo.useQ then
+						CastSpell(_Q)
+					end
+				end
+			else
+				if myHero:CanUseSpell(_E) and GetDistance(Target) < (rangeE + 1) and DariusMenu.Combo.useE then
+					CastSpell(_E, Target)
+				end
+			end
+			if not myHero:CanUseSpell(_Q) and not myHero:CanUseSpell(_W) and GetDistance(Target) < AARange then
+				myHero:Attack(Target)
+			end
+		end
+	end
+end
+
+function stealJungle()
+	if Nashor ~= nil then if not Nashor.valid or Nashor.dead then Nashor = nil end end
+	if Dragon ~= nil then if not Dragon.valid or Dragon.dead then Dragon = nil end end
+	if Golem1 ~= nil then if not Golem1.valid or Golem1.dead then Golem1 = nil end end
+	if Golem2 ~= nil then if not Golem2.valid or Golem2.dead then Golem2 = nil end end
+	if Lizard1 ~= nil then if not Lizard1.valid or Lizard1.dead then Lizard1 = nil end end
+	if Lizard2 ~= nil then if not Lizard2.valid or Lizard2.dead then Lizard2 = nil end end
+	if Vilemaw ~= nil then if not Vilemaw.valid or Vilemaw.dead then Vilemaw = nil end end
+
+	if Nashor ~= nil then if Nashor.visible then Steal(Nashor) end end
+	if Dragon ~= nil then if Dragon.visible then Steal(Dragon) end end
+	if Golem1 ~= nil then if Golem1.visible then Steal(Golem1) end end
+	if Golem2 ~= nil then if Golem2.visible then Steal(Golem2) end end
+	if Lizard1 ~= nil then if Lizard1.visible then Steal(Lizard1) end end
+	if Lizard2 ~= nil then if Lizard2.visible then Steal(Lizard2) end end
+	if Vilemaw ~= nil then if Vilemaw.visible then Steal(Vilemaw) end end
+end
+
+function Steal(Monster)
+	if Monster ~= nil then
+		if GetDistance(Monster) < (rangeQ + 1) then
+			if Monster.health < calcDmg("Q", Monster) then
+				CastSpell(_Q)
+			end
+		end
+	end
+end
+
+function calcDmg(skills, T)
+	local qDmg = getDmg("Q", T, myHero)
+	local wDmg = GetWMultiplier(myHero:GetSpellData(_W).level) * getDmg("AD", T, myHero)
+	if skills == "Q" then
+		return qDmg
+	else
+		return qDmg + wDmg;
+	end
+end
+
+function OnDraw()
+	if DariusMenu.Drawing.drawQ then
+		DrawCircle(myHero.x, myHero.y, myHero.z, rangeQ, 0x5544AA)
+	end
+	if DariusMenu.Drawing.drawW then
+		DrawCircle(myHero.x, myHero.y, myHero.z, rangeW, 0x5544AA)
+	end
+	if DariusMenu.Drawing.drawE then
+		DrawCircle(myHero.x, myHero.y, myHero.z, rangeE, 0x5544AA)
+	end
+	if DariusMenu.Drawing.drawR then
+		DrawCircle(myHero.x, myHero.y, myHero.z, rangeR, 0x5544AA)
+	end
+	if DariusMenu.Drawing.drawTarget and Target ~= nil then
+		for i=1,3, .5 do
+            DrawCircle(Target.x, Target.y, Target.z, 125+i, 0xFF0000)
+        end
+	end
+end
+
+function OnGainBuff(unit, buff)
+	if unit and unit.team ~= myHero.team and buff.name == "dariushemo" then
+	    for i, enemy in pairs(hemoTable) do
+	        if enemy.name == unit.name then
+	            enemy.stack = 1
+	        end
+		end
+	end
+end
+
+function OnLoseBuff(unit, buff)
+	if buff.name == "dariushemo" then
+ 	 for i, enemy in pairs(hemoTable) do
+	        if enemy.name == unit.name then
+	            enemy.stack = 0
+	        end
+		end
+	end
+end
+
+function OnUpdateBuff(unit, buff)
+	if buff.name == "dariushemo" then
+		for i, enemy in pairs(hemoTable) do
+	       if enemy.name == unit.name then
+	            enemy.stack = buff.stack
+	        end
+		end
+	end
+end
+
+function OnCreateObj(obj)
+	if obj ~= nil and obj.type == "obj_AI_Minion" and obj.name ~= nil then
+		if obj.name:lower():find("TT_Spiderboss") then Vilemaw = obj end
+		if obj.name:lower():find("worm1") then Nashor = obj end
+		if obj.name:lower():find("dragon6") then Dragon = obj end
+		if obj.name:lower():find("ancientgolem1") then Golem1 = obj end
+		if obj.name:lower():find("ancientgolem7") then Golem2 = obj end
+		if obj.name:lower():find("lizardelder4") then Lizard1 = obj end
+		if obj.name:lower():find("lizardelder1") then Lizard2 = obj end
+	end
+end
+
+function OnDeleteObj(obj)
+	if obj ~= nil and obj.type == "obj_AI_Minion" and obj.name ~= nil then
+		if obj.name:lower():find("TT_Spiderboss") then Vilemaw = nil end
+		if obj.name:lower():find("worm1") then Nashor = nil end
+		if obj.name:lower():find("dragon6") then Dragon = nil end
+		if obj.name:lower():find("ancientgolem1") then Golem1 = nil end
+		if obj.name:lower():find("ancientgolem7") then Golem2 = nil end
+		if obj.name:lower():find("lizardelder4") then Lizard1 = nil end
+		if obj.name:lower():find("lizardelder1") then Lizard2 = nil end
+	end
+end
+
+function moveToCursor()
+	if GetDistance(mousePos) then
+		local moveToPos = myHero + (Vector(mousePos) - myHero):normalized()*300
+		myHero:MoveTo(moveToPos.x, moveToPos.z)
+    end        
+end
+
+function GetMultiplier(stacks)
+	return 1 + stacks/5
+end
+
+function GetWMultiplier(WLevel)
+	if WLevel == 0 then
+		return 0
+	else
+		return 1 + WLevel/5
+	end
+end
+
+--function calcDamage(T)
+--	  for i, enemy in pairs(hemoTable) do
+--        if enemy.name == T.name then
+--            multiplier = GetMultiplier(enemy.stack)
+--        end
+--	end
+--	local qDmg = getDmg("Q", T, myHero)
+--	local rDmg = multiplier * getDmg("R", T, myHero)
+--	local wDmg = GetWMultiplier(myHero:GetSpellData(_W).level) * getDmg("AD", T, myHero)
+--	local totalDmg = qDmg + rDmg + wDmg
+--	return totalDmg
+--end
