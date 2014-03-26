@@ -10,20 +10,17 @@ function OnLoad()
 end
 -- Our Variables --
 function Variables()
-rangeQ = 425
+	rangeQ = 425
 	rangeiQ= 270
 	rangeW = 145
 	rangeE = 540  
 	rangeR = 460 
 	AARange = 125
-
-	for i=0, heroManager.iCount, 1 do
-        local enemy = heroManager:GetHero(i)
-        if enemy and enemy.team ~= myHero.team then
-                enemy.stack = 0
-                table.insert(hemoTable,enemy)
-		end
-	end
+	
+	TextList = {"Harass him", "Q = Kill", "W = Kill", "E = Kill!", "Q+W = Kill", "Q+E = Kill", "E+W = Kill", "Q+E+W = Kill", "Q+E+W+Itm = Kill", "Q+W+E+R: ", "Need CDs"}
+	KillText = {}
+		colorText = ARGB(255,255,204,0)
+	
 end
 function DariusMenu()
 DariusMenu = scriptConfig("DunkerDarius", "DunkerDarius")
@@ -54,9 +51,9 @@ DariusMenu = scriptConfig("DunkerDarius", "DunkerDarius")
 	DariusMenu:addTS(ts)
 end
 function OnTick()
-  ts:update();
-  Target = ts.target
-
+	ts:update();
+	Target = ts.target
+	DamageCalculation()
 	if DariusMenu.Combo.combo then
 		Combo()
 	end
@@ -66,9 +63,31 @@ function OnTick()
 	if DariusMenu.Other.stealJungle then
 		stealJungle()
 	end
-
 end
+function DamageCalculation()
+	--- Calculate our Damage On Enemies ---	
+	 	for i=1, heroManager.iCount do
+			local enemy = heroManager:GetHero(i)
+			if ValidTarget(enemy) then
+				dfgDmg, bftDmg, hxgDmg, bwcDmg, tmtDmg, hdrDmg, iDmg = 0, 0, 0, 0, 0, 0, 0
+				qDmg =		(SkillQ.ready and	getDmg("Q",			enemy, myHero) or 0)
+				wDmg =		(SkillW.ready and	getDmg("W",			enemy, myHero) or 0)
+				eDmg =		(SkillE.ready and	getDmg("E",			enemy, myHero) or 0)
+				rDmg =		(SkillR.ready and	getDmg("R",			enemy, myHero) or 0)
+				dfgDmg =	(dfgSlot and		getDmg("DFG",		enemy, myHero) or 0)
+				bftdmg =	(bftSlot and		getDmg("BLACKFIRE",	enemy, myHero) or 0)
+				hxgDmg =	(hxgSlot and		getDmg("HXG",		enemy, myHero) or 0)
+				bwcDmg =	(bwcSlot and		getDmg("BWC",		enemy, myHero) or 0)
+				tmtDmg =	(tmtSlot and		getDmg("TIAMAT",	enemy, myHero) or 0)
+				hdrDmg =	(tmtSlot and		getDmg("HYDRA",		enemy, myHero) or 0)
+				iDmg =		(ignite and			getDmg("IGNITE",	enemy, myHero) or 0)
 
+				onspellDmg = bftDmg
+				itemsDmg = dfgDmg + hxgDmg + bwcDmg + tmtDmg + hdrDmg + iDmg + onspellDmg
+			end
+		end
+end
+-- / Damage Calculation Function / --
 function KS()
 	for i=1, heroManager.iCount do
 		local T = heroManager:getHero(i)
@@ -95,7 +114,6 @@ function KS()
 		end
 	end
 end
-
 function Combo()
 	if Target == nil and DariusMenu.Other.moveToMouse then
 		moveToCursor()
@@ -127,7 +145,6 @@ function Combo()
 		end
 	end
 end
-
 function stealJungle()
 	if Nashor ~= nil then if not Nashor.valid or Nashor.dead then Nashor = nil end end
 	if Dragon ~= nil then if not Dragon.valid or Dragon.dead then Dragon = nil end end
@@ -136,7 +153,6 @@ function stealJungle()
 	if Lizard1 ~= nil then if not Lizard1.valid or Lizard1.dead then Lizard1 = nil end end
 	if Lizard2 ~= nil then if not Lizard2.valid or Lizard2.dead then Lizard2 = nil end end
 	if Vilemaw ~= nil then if not Vilemaw.valid or Vilemaw.dead then Vilemaw = nil end end
-
 	if Nashor ~= nil then if Nashor.visible then Steal(Nashor) end end
 	if Dragon ~= nil then if Dragon.visible then Steal(Dragon) end end
 	if Golem1 ~= nil then if Golem1.visible then Steal(Golem1) end end
@@ -145,7 +161,6 @@ function stealJungle()
 	if Lizard2 ~= nil then if Lizard2.visible then Steal(Lizard2) end end
 	if Vilemaw ~= nil then if Vilemaw.visible then Steal(Vilemaw) end end
 end
-
 function Steal(Monster)
 	if Monster ~= nil then
 		if GetDistance(Monster) < (rangeQ + 1) then
@@ -155,7 +170,6 @@ function Steal(Monster)
 		end
 	end
 end
-
 function calcDmg(skills, T)
 	local qDmg = getDmg("Q", T, myHero)
 	local wDmg = GetWMultiplier(myHero:GetSpellData(_W).level) * getDmg("AD", T, myHero)
@@ -165,7 +179,6 @@ function calcDmg(skills, T)
 		return qDmg + wDmg;
 	end
 end
-
 function OnDraw()
 	if DariusMenu.Drawing.drawQ then
 		DrawCircle(myHero.x, myHero.y, myHero.z, rangeQ, 0x5544AA)
