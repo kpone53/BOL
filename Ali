@@ -340,7 +340,7 @@ function OnDraw()
         DrawCircle(SelectedTarget.x, SelectedTarget.y, SelectedTarget.z, 100, ARGB(255,255,0,0))
     end
 	if AlistarMenu.Drawing.ComboPossible then
-		if QREADY == READY and WREADY == READY and checkMana() then
+		if QREADY == true and false == READY and checkMana() then
 			DrawText("You can combo!", 18, 100, 140, 0x00FF00)
 		else
 			DrawText("Combo in "..(myHero.mana - (QMana + WMana)).." mana", 18, 100, 140, 0xFF0000)
