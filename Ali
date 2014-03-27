@@ -358,9 +358,8 @@ function OnDraw()
      end  
 --[[HealthBar HP tracker]]
     if AlistarMenu.Drawing.DrawDamage then
-        for i=1, heroManager.iCount do
-            local enemy = heroManager:GetHero(i)
-            if ValidTarget(enemy) then
+        for _, enemy in pairs(GetEnemyHeroes()) do
+            if ValidTarget(enemy) and enemy ~= nil then
                 if DamageToHeros[i] ~= nil then
                     RemainingHealth = enemy.health - DamageToHeros[i]
                 end
