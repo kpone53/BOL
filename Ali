@@ -71,9 +71,9 @@ function OnTick()
     -- end
 end  
 function OnTickChecks()
-    QREADY = ((myHero:CanUseSpell(_Q) == READY) or (myHero:GetSpellData(_Q).level > 0))
-    WREADY = ((myHero:CanUseSpell(_W) == READY) or (myHero:GetSpellData(_W).level > 0))
-    EREADY = (myHero:CanUseSpell(_E) == READY) or (myHero:GetSpellData(_E).level > 0))
+    QREADY = (myHero:CanUseSpell(_Q) == READY)
+    WREADY = (myHero:CanUseSpell(_W) == READY)
+    EREADY = (myHero:CanUseSpell(_E) == READY)
 	iReady = (ignite ~= nil and myHero:CanUseSpell(ignite) == READY)
     QMana = myHero:GetSpellData(_Q).mana
     WMana = myHero:GetSpellData(_W).mana          
@@ -327,7 +327,7 @@ function CheckEnemiesHitByQ()
 return #enemieshit, enemieshit
 end     
 function checkMana()
-    return (myHero:GetSpellData(_Q).mana  + myHero:GetSpellData(_W).mana)  <= myHero.mana
+    return (myHero:GetSpellData(_Q).mana  + myHero:GetSpellData(_W).mana)  < myHero.mana
 end
 function OnDraw()
 	if AlistarMenu.Drawing.Qrange then
@@ -336,18 +336,18 @@ function OnDraw()
     if AlistarMenu.Drawing.Wrange then
        DrawCircle(myHero.x, myHero.y, myHero.z, wRange, ARGB(255,0,255,0))
     end         
-    if SelectedTarget ~= nil and ValidTarget(SelectedTarget) then
-        DrawCircle(SelectedTarget.x, SelectedTarget.y, SelectedTarget.z, 100, ARGB(255,255,0,0))
+    if (ts.target ~= nil) then
+        DrawCircle(ts.target.x, ts.target.y, ts.target.z, 100, ARGB(255,255,0,0))
     end
 	if AlistarMenu.Drawing.ComboPossible then
-		if QREADY == true and false == READY and checkMana() then
-			DrawText("You can combo!", 18, 100, 140, 0x00FF00)
+		if QREADY == true and WREADY == true and checkMana() then
+			DrawText("You can combo!", 18, 100, 100, 0xFFFF00)
 		else
-			DrawText("Combo in "..(myHero.mana - (QMana + WMana)).." mana", 18, 100, 140, 0xFF0000)
+			DrawText("Combo in "..(myHero.mana - (myHero:GetSpellData(_Q).mana  + myHero:GetSpellData(_W).mana)).." mana", 18, 100, 100, 0x0099FF)
 		end
 	end
 -- Enemies Circles
-    if AlistarMenu.Drawing.drawcirclests and ValidTarget(ts.target) and not myHero.dead then
+    if AlistarMenu.Drawing.drawcirclests and (ts.target ~= nil) and not myHero.dead then
             for j=0, 5 do
                 if GetDistance(ts.target) > wRange / 2 then
                     DrawCircle(ts.target.x, ts.target.y, ts.target.z, 100 + j*1.5, 0xFF0000) -- Target red circle when they are in W range.
